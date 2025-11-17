@@ -1,19 +1,19 @@
 import model.MandelbrotModel;
-import view.MainFrame;
+import delegate.MainFrame;
 
 /*
- * Author: konan-91
+ * Author: Konan-91
 */
 public class Launcher {
 
     /*
-     * Using Model-Delegate structure (there is no controller object so it's not MVC - actually, verify if true).
+     * Using Model-Delegate structure
      */
     public static void main(String[] args) {
         // Create model
         MandelbrotModel model = new MandelbrotModel();
 
-        // Create delegate (view & controller)
+        // Create delegate
         new MainFrame(model);
     }
 
