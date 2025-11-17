@@ -25,6 +25,8 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
     private final JButton redoButton;
     /** Slider to control the maximum iterations. */
     private final JSlider iterationSlider;
+    /** Selection box for the colour scheme. */
+    private final JComboBox<MandelbrotModel.ColourScheme> colourBox;
 
     /** The fixed width of the rendering panel. */
     private static final int WIDTH = 800;
@@ -52,28 +54,34 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
         panel.setPanListener(this::handlePan);
 
         // --- Create Control Panel (Bottom) ---
-        JPanel controlPanel = new JPanel();
-        controlPanel.setLayout(new FlowLayout(FlowLayout.CENTER, 10, 5));
+        // We use a main panel with BorderLayout to hold two rows
+        JPanel mainControlPanel = new JPanel(new BorderLayout());
+
+        // Top row: Buttons
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
         undoButton = new JButton("Undo");
         undoButton.addActionListener(e -> model.undo());
-        controlPanel.add(undoButton);
+        buttonPanel.add(undoButton);
 
         redoButton = new JButton("Redo");
         redoButton.addActionListener(e -> model.redo());
-        controlPanel.add(redoButton);
+        buttonPanel.add(redoButton);
 
         JButton resetButton = new JButton("Reset");
         resetButton.addActionListener(e -> model.defaultValues());
-        controlPanel.add(resetButton);
+        buttonPanel.add(resetButton);
+
+        mainControlPanel.add(buttonPanel, BorderLayout.NORTH);
+
+        // Bottom row: Sliders and settings
+        JPanel settingsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
         // Max Iterations Slider
-        controlPanel.add(new JSeparator(SwingConstants.VERTICAL));
-        controlPanel.add(new JLabel("Max Iterations:"));
-
-        // Sensible range: Default (50) to a high value (2000) for deep zooms
-        iterationSlider = new JSlider(50, 2000, model.getMaxIterations());
-        iterationSlider.setMajorTickSpacing(450);
+        settingsPanel.add(new JLabel("Max Iterations:"));
+        // Changed max to 1500 as requested
+        iterationSlider = new JSlider(50, 1500, model.getMaxIterations());
+        iterationSlider.setMajorTickSpacing(350);
         iterationSlider.setMinorTickSpacing(100);
         iterationSlider.setPaintTicks(true);
         iterationSlider.setPaintLabels(true);
@@ -82,9 +90,22 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
                 model.setMaxIterations(iterationSlider.getValue());
             }
         });
-        controlPanel.add(iterationSlider);
+        settingsPanel.add(iterationSlider);
 
-        add(controlPanel, BorderLayout.SOUTH);
+        // Colour Scheme Selection Box
+        settingsPanel.add(new JSeparator(SwingConstants.VERTICAL));
+        settingsPanel.add(new JLabel("Colour Scheme:"));
+        colourBox = new JComboBox<>(MandelbrotModel.ColourScheme.values());
+        colourBox.setSelectedItem(model.getColourScheme());
+        colourBox.addActionListener(e -> {
+            // Tell the model to update the scheme
+            model.setColourScheme((MandelbrotModel.ColourScheme) colourBox.getSelectedItem());
+        });
+        settingsPanel.add(colourBox);
+
+        mainControlPanel.add(settingsPanel, BorderLayout.CENTER);
+
+        add(mainControlPanel, BorderLayout.SOUTH);
 
         // --- Finalise Frame ---
         pack();
@@ -166,7 +187,8 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
         panel.renderMandelbrot(
                 model.getMandelbrotData(),
                 model.getMaxIterations(),
-                model.getMagnification()
+                model.getMagnification(),
+                model.getColourScheme() // Pass the new scheme
         );
 
         // 3. Update slider position (e.g., after an undo/reset)
@@ -175,5 +197,8 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
         // 4. Update button enabled state
         undoButton.setEnabled(model.canUndo());
         redoButton.setEnabled(model.canRedo());
+
+        // 5. Update colour box selection (e.g., after an undo/reset)
+        colourBox.setSelectedItem(model.getColourScheme());
     }
 }

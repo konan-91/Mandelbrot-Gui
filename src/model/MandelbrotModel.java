@@ -16,35 +16,46 @@ public class MandelbrotModel {
     /** Handles adding, removing, and notifying PropertyChangeListeners. */
     private final PropertyChangeSupport pcs;
 
+    /**
+     * Enum representing the available colour mapping schemes.
+     */
+    public enum ColourScheme {
+        BLACK_AND_WHITE, BW_GRADIENT, RED, GREEN, BLUE, SPECIAL
+    }
+
     // Constants for default state
     private static final double INITIAL_MIN_REAL = MandelbrotCalculator.INITIAL_MIN_REAL;
     private static final double INITIAL_MAX_REAL = MandelbrotCalculator.INITIAL_MAX_REAL;
     private static final double INITIAL_MIN_IMAGINARY = MandelbrotCalculator.INITIAL_MIN_IMAGINARY;
     private static final double INITIAL_MAX_IMAGINARY = MandelbrotCalculator.INITIAL_MAX_IMAGINARY;
     private static final int INITIAL_MAX_ITERATIONS = MandelbrotCalculator.INITIAL_MAX_ITERATIONS;
+    /** The default colour scheme to use on startup and reset. */
+    public static final ColourScheme INITIAL_COLOUR_SCHEME = ColourScheme.BLACK_AND_WHITE;
 
     /** The real-number range of the initial, default view. */
     private static final double INITIAL_REAL_RANGE = INITIAL_MAX_REAL - INITIAL_MIN_REAL;
 
     // Current state parameters
-    // The minimum real value (left edge) of the complex plane being viewed.
+    /** The minimum real value (left edge) of the complex plane being viewed. */
     private double minReal;
-    // The maximum real value (right edge) of the complex plane being viewed.
+    /** The maximum real value (right edge) of the complex plane being viewed. */
     private double maxReal;
-    // The minimum imaginary value (top edge) of the complex plane being viewed.
+    /** The minimum imaginary value (top edge) of the complex plane being viewed. */
     private double minImaginary;
-    // The maximum imaginary value (bottom edge) of the complex plane being viewed.
+    /** The maximum imaginary value (bottom edge) of the complex plane being viewed. */
     private double maxImaginary;
-    // The current maximum iteration count.
+    /** The current maximum iteration count. */
     private int maxIterations;
+    /** The current selected colour scheme. */
+    private ColourScheme currentScheme;
 
-    // The 2D array holding the calculated iteration data for the current view.
+    /** The 2D array holding the calculated iteration data for the current view. */
     private int[][] mandelbrotData;
 
     // Deques for undo/redo
-    // A stack holding previous parameter states for the undo operation.
+    /** A stack holding previous parameter states for the undo operation. */
     private final ArrayDeque<Parameters> undoStack;
-    // A stack holding undone parameter states for the redo operation.
+    /** A stack holding undone parameter states for the redo operation. */
     private final ArrayDeque<Parameters> redoStack;
 
     /**
@@ -54,16 +65,18 @@ public class MandelbrotModel {
     private static class Parameters {
         final double minReal, maxReal, minImaginary, maxImaginary;
         final int maxIterations;
+        final ColourScheme colourScheme;
 
         /**
          * Constructs a new Parameters snapshot.
          */
-        Parameters(double minReal, double maxReal, double minImaginary, double maxImaginary, int maxIterations) {
+        Parameters(double minReal, double maxReal, double minImaginary, double maxImaginary, int maxIterations, ColourScheme colourScheme) {
             this.minReal = minReal;
             this.maxReal = maxReal;
             this.minImaginary = minImaginary;
             this.maxImaginary = maxImaginary;
             this.maxIterations = maxIterations;
+            this.colourScheme = colourScheme;
         }
     }
 
@@ -91,6 +104,7 @@ public class MandelbrotModel {
         minImaginary = INITIAL_MIN_IMAGINARY;
         maxImaginary = INITIAL_MAX_IMAGINARY;
         maxIterations = INITIAL_MAX_ITERATIONS;
+        currentScheme = INITIAL_COLOUR_SCHEME;
         undoStack.clear();
         redoStack.clear();
         fireUpdate();
@@ -160,14 +174,27 @@ public class MandelbrotModel {
         fireUpdate();
     }
 
+    /**
+     * Sets a new colour scheme.
+     * Pushes the old state to the undo stack and notifies listeners.
+     *
+     * @param scheme The new colour scheme to use.
+     */
+    public void setColourScheme(ColourScheme scheme) {
+        if (scheme == this.currentScheme) return; // No change
+        pushCurrentStateToUndo();
+        this.currentScheme = scheme;
+        fireUpdate();
+    }
+
     // --- Undo / Redo Logic ---
 
     /**
      * Pushes the *current* state to the undo stack and clears the redo stack.
-     * This is called before any new user action (zoom, pan, iteration change).
+     * This is called before any new user action (zoom, pan, iteration, colour change).
      */
     private void pushCurrentStateToUndo() {
-        undoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations));
+        undoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations, currentScheme));
         redoStack.clear(); // A new action invalidates the old redo history
     }
 
@@ -178,7 +205,7 @@ public class MandelbrotModel {
     public void undo() {
         if (canUndo()) {
             // Push current state to redo stack
-            redoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations));
+            redoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations, currentScheme));
             // Pop and load previous state from undo stack
             loadParameters(undoStack.pop());
         }
@@ -191,7 +218,7 @@ public class MandelbrotModel {
     public void redo() {
         if (canRedo()) {
             // Push current state back to undo stack
-            undoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations));
+            undoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations, currentScheme));
             // Pop and load next state from redo stack
             loadParameters(redoStack.pop());
         }
@@ -208,6 +235,7 @@ public class MandelbrotModel {
         minImaginary = p.minImaginary;
         maxImaginary = p.maxImaginary;
         maxIterations = p.maxIterations;
+        currentScheme = p.colourScheme;
         fireUpdate(); // Notify listeners to update the view
     }
 
@@ -252,6 +280,13 @@ public class MandelbrotModel {
      */
     public int getMaxIterations() {
         return maxIterations;
+    }
+
+    /**
+     * @return The current selected colour scheme.
+     */
+    public ColourScheme getColourScheme() {
+        return currentScheme;
     }
 
     /**

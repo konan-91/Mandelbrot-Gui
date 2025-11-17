@@ -1,6 +1,8 @@
 import model.MandelbrotModel;
 import delegate.MainFrame;
 
+// TODO: Reverse drag to pan direction. Fix comments. Write tests. Write report.
+
 /*
  * Author: Konan-91
  *
