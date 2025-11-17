@@ -38,8 +38,33 @@ public class MandelbrotRender extends JPanel {
                 if (iterations >= maxIterations) {
                     image.setRGB(x, y, Color.BLACK.getRGB());
                 } else {
-                    image.setRGB(x, y, Color.WHITE.getRGB());
+                    // gradient from 0 -> maxIterations
+                    float ratio = (float) iterations / maxIterations;
+                    int r = (int)(255 * ratio);
+                    int g = (int)(255 * ratio);
+                    int b = 120; //(int)(255 * ratio);
+
+                    image.setRGB(x, y, new Color(r, g, b).getRGB());
+                    System.out.println(r);
+                    System.out.println(g);
+                    System.out.println(b);
                 }
+
+                /*
+                else if (iterations < maxIterations / 8) {
+                    image.setRGB(x, y, Color.BLACK.getRGB());
+                } else if (iterations < maxIterations / 4) {
+                    image.setRGB(x, y, Color.BLUE.getRGB());
+                } else if (iterations < maxIterations / 3) {
+                    image.setRGB(x, y, Color.WHITE.getRGB());
+                } else if (iterations < maxIterations / 2) {
+                    image.setRGB(x, y, Color.RED.getRGB());
+                } else if (iterations < maxIterations / 1.2) {
+                    image.setRGB(x, y, Color.WHITE.getRGB());
+                } else {
+                    image.setRGB(x, y, Color.BLACK.getRGB());
+                }
+                 */
             }
         }
 
