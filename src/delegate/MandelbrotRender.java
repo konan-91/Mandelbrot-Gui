@@ -7,6 +7,13 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.image.BufferedImage;
 
+/**
+ * The class responsible for ... complete this
+ *
+ * @author 250014506
+ * @version 1
+ * @since 1
+ */
 public class MandelbrotRender extends JPanel {
     private BufferedImage image;
 
@@ -94,7 +101,7 @@ public class MandelbrotRender extends JPanel {
 
         // Draw red rectangle while dragging
         if (dragging && dragStart != null && dragEnd != null) {
-            g.setColor(Color.RED);
+            g.setColor(Color.PINK);
             ((Graphics2D) g).setStroke(new BasicStroke(2));
 
             int x = Math.min(dragStart.x, dragEnd.x);

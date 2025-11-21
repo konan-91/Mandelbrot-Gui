@@ -12,6 +12,10 @@ import java.beans.PropertyChangeListener;
  * This class acts as the Controller in the MVC-like pattern.
  * It sets up the UI components (panel, buttons, slider) and listens for
  * updates from the model to refresh the view.
+ *
+ * @author 250014506
+ * @version 1
+ * @since 1
  */
 public class MainFrame extends JFrame implements PropertyChangeListener {
     /** The data model containing the Mandelbrot state. */

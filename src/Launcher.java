@@ -1,13 +1,15 @@
 import model.MandelbrotModel;
 import delegate.MainFrame;
 
-// TODO: Reverse drag to pan direction. Fix comments. Write tests. Write report.
+// TODO: Fix comments. Write tests. Write report.
 
 /*
- * Author: Konan-91
- *
  * Launches the Mandelbrot viewer application.
- * This class contains the main method and is the entry point for the program.
+ * This class is the entry point for the program.
+ *
+ * @author 250014506
+ * @version 1
+ * @since 1
  */
 public class Launcher {
 

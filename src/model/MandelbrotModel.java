@@ -9,6 +9,10 @@ import java.util.ArrayDeque;
  * This class manages all state, including the current complex plane coordinates,
  * iteration count, undo/redo stacks, and the calculated Mandelbrot data.
  * It follows the observer pattern, firing property changes when its state is updated.
+ *
+ * @author 250014506
+ * @version 1
+ * @since 1
  */
 public class MandelbrotModel {
     /** The utility class for performing the Mandelbrot calculation. */
@@ -154,10 +158,10 @@ public class MandelbrotModel {
     public void pan(double realShift, double imagShift) {
         pushCurrentStateToUndo();
         // A pan is a translation, so we subtract the shift from the bounds
-        minReal = minReal - realShift;
-        maxReal = maxReal - realShift;
-        minImaginary = minImaginary - imagShift;
-        maxImaginary = maxImaginary - imagShift;
+        minReal = minReal + realShift;
+        maxReal = maxReal + realShift;
+        minImaginary = minImaginary + imagShift;
+        maxImaginary = maxImaginary + imagShift;
         fireUpdate();
     }
 
