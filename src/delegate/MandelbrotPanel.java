@@ -24,7 +24,9 @@ public class MandelbrotPanel extends JPanel {
     // For mouse dragging
     private Point dragStart;
     private Point dragEnd;
-    private enum DragMode { NONE, ZOOM, PAN } // Enums for mouse action state
+
+    private enum DragMode {NONE, ZOOM, PAN} // Enums for mouse action state
+
     private DragMode currentDragMode = DragMode.NONE;
 
     // Listeners for UI events
@@ -143,10 +145,10 @@ public class MandelbrotPanel extends JPanel {
     /**
      * Renders the Mandelbrot data using a selected colour scheme.
      *
-     * @param data            The iteration matrix.
-     * @param maxIterations   The cutoff for being inside the set.
-     * @param magnification   The current zoom magnification to display.
-     * @param scheme          The colour scheme to use.
+     * @param data          The iteration matrix.
+     * @param maxIterations The cutoff for being inside the set.
+     * @param magnification The current zoom magnification to display.
+     * @param scheme        The colour scheme to use.
      */
     public void renderMandelbrot(int[][] data, int maxIterations, double magnification, MandelbrotModel.ColourScheme scheme) {
         if (data == null) return;
@@ -171,7 +173,7 @@ public class MandelbrotPanel extends JPanel {
                         case BW_GRADIENT:
                             // Gradient from black to white
                             float ratio_bw = (float) iterations / maxIterations;
-                            int val = (int)(255 * ratio_bw);
+                            int val = (int) (255 * ratio_bw);
                             image.setRGB(x, y, new Color(val, val, val).getRGB());
                             break;
 
@@ -183,14 +185,14 @@ public class MandelbrotPanel extends JPanel {
                             break;
 
                         case GREEN:
-                            float g_hue = 1.0f/3.0f; // green
+                            float g_hue = 1.0f / 3.0f; // green
                             float g_sat = 1.0f;
                             float g_bri = iterations / (float) maxIterations;
                             image.setRGB(x, y, Color.getHSBColor(g_hue, g_sat, g_bri).getRGB());
                             break;
 
                         case BLUE:
-                            float b_hue = 2.0f/3.0f; // blue
+                            float b_hue = 2.0f / 3.0f; // blue
                             float b_sat = 1.0f;
                             float b_bri = iterations / (float) maxIterations;
                             image.setRGB(x, y, Color.getHSBColor(b_hue, b_sat, b_bri).getRGB());
@@ -203,6 +205,7 @@ public class MandelbrotPanel extends JPanel {
                             // 'xx.xf' controls the width of the bands
                             // This colour scheme looks much better with higher iteration counts!
                             float hue = (iterations % 100) / 100.0f;
+
 
                             // Full saturation (1.0f) and brightness (1.0f) used for more vibrant colours.
                             Color c = Color.getHSBColor(hue, 1.0f, 1.0f);
@@ -296,5 +299,12 @@ public class MandelbrotPanel extends JPanel {
         dragEnd = null;
         currentDragMode = DragMode.NONE;
         repaint();
+    }
+
+    /**
+     * Method for saving the BufferedImage
+     */
+    public BufferedImage getImage() {
+        return image;
     }
 }

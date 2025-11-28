@@ -68,6 +68,31 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
         resetButton.addActionListener(_ -> model.defaultValues());
         buttonPanel.add(resetButton);
 
+        // Save image button
+        JButton saveButton = new JButton("Save");
+        saveButton.addActionListener(e -> {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Save Mandelbrot Image");
+
+            // Show the save dialog
+            int userSelection = fileChooser.showSaveDialog(this);
+            if (userSelection == JFileChooser.APPROVE_OPTION) {
+                java.io.File fileToSave = fileChooser.getSelectedFile();
+                // Ensure the file has a .png extension
+                if (!fileToSave.getAbsolutePath().endsWith(".png")) {
+                    fileToSave = new java.io.File(fileToSave.getAbsolutePath() + ".png");
+                }
+                try {
+                    // Retrieve the image from the panel and save it
+                    javax.imageio.ImageIO.write(panel.getImage(), "png", fileToSave);
+                    JOptionPane.showMessageDialog(this, "Image saved successfully!");
+                } catch (java.io.IOException ex) {
+                    JOptionPane.showMessageDialog(this, "Error saving image: " + ex.getMessage());
+                }
+            }
+        });
+
+        buttonPanel.add(saveButton);
         mainControlPanel.add(buttonPanel, BorderLayout.NORTH);
 
         // Bottom row for sliders and settings
