@@ -5,8 +5,8 @@ import java.beans.PropertyChangeSupport;
 import java.util.ArrayDeque;
 
 /**
- * The Model component for the Mandelbrot viewer.
- * This class manages all state, including the current complex plane coordinates,
+ * The Model for the Mandelbrot viewer.
+ * This class manages all data, including complex plane coordinates,
  * iteration count, undo/redo stacks, and the calculated Mandelbrot data.
  * It follows the observer pattern, firing property changes when its state is updated.
  *
@@ -15,65 +15,50 @@ import java.util.ArrayDeque;
  * @since 1
  */
 public class MandelbrotModel {
-    /** The utility class for performing the Mandelbrot calculation. */
     private final MandelbrotCalculator mandelbrotCalculator;
-    /** Handles adding, removing, and notifying PropertyChangeListeners. */
-    private final PropertyChangeSupport pcs;
+    private final PropertyChangeSupport pcs; // Handles adding, removing, and notifying PropertyChangeListeners
 
-    /**
-     * Enum representing the available colour mapping schemes.
-     */
+    // Enums for colour schemes
     public enum ColourScheme {
-        BLACK_AND_WHITE, BW_GRADIENT, RED, GREEN, BLUE, SPECIAL
+        BLACK_AND_WHITE, BW_GRADIENT, RED, GREEN, BLUE, MULTI
     }
 
-    // Constants for default state
+    // Parameters that initialise a default view and colour scheme for the Mandelbrot data
     private static final double INITIAL_MIN_REAL = MandelbrotCalculator.INITIAL_MIN_REAL;
     private static final double INITIAL_MAX_REAL = MandelbrotCalculator.INITIAL_MAX_REAL;
     private static final double INITIAL_MIN_IMAGINARY = MandelbrotCalculator.INITIAL_MIN_IMAGINARY;
     private static final double INITIAL_MAX_IMAGINARY = MandelbrotCalculator.INITIAL_MAX_IMAGINARY;
     private static final int INITIAL_MAX_ITERATIONS = MandelbrotCalculator.INITIAL_MAX_ITERATIONS;
-    /** The default colour scheme to use on startup and reset. */
     public static final ColourScheme INITIAL_COLOUR_SCHEME = ColourScheme.BLACK_AND_WHITE;
 
-    /** The real-number range of the initial, default view. */
+    // Store the initial span of the image in order to calculate the zoom level
     private static final double INITIAL_REAL_RANGE = INITIAL_MAX_REAL - INITIAL_MIN_REAL;
 
-    // Current state parameters
-    /** The minimum real value (left edge) of the complex plane being viewed. */
-    private double minReal;
-    /** The maximum real value (right edge) of the complex plane being viewed. */
-    private double maxReal;
-    /** The minimum imaginary value (top edge) of the complex plane being viewed. */
-    private double minImaginary;
-    /** The maximum imaginary value (bottom edge) of the complex plane being viewed. */
-    private double maxImaginary;
-    /** The current maximum iteration count. */
+    // Parameters for the current state of the Mandelbrot data
+    private double minReal; // Left edge
+    private double maxReal; // Right edge
+    private double minImaginary; // Top edge
+    private double maxImaginary; // Bottom edge
     private int maxIterations;
-    /** The current selected colour scheme. */
     private ColourScheme currentScheme;
 
-    /** The 2D array holding the calculated iteration data for the current view. */
+    // Matrix for holding iteration data for current view
     private int[][] mandelbrotData;
 
-    // Deques for undo/redo
-    /** A stack holding previous parameter states for the undo operation. */
+    // Deques for undo/redo operations
     private final ArrayDeque<Parameters> undoStack;
-    /** A stack holding undone parameter states for the redo operation. */
     private final ArrayDeque<Parameters> redoStack;
 
     /**
-     * An immutable inner class to store a complete snapshot of the model's
-     * parameters for the undo/redo stacks.
+     * An inner class / data structure for storing snapshots of the model's parameters
+     * for appending to undo/redo stacks.
      */
     private static class Parameters {
         final double minReal, maxReal, minImaginary, maxImaginary;
         final int maxIterations;
         final ColourScheme colourScheme;
 
-        /**
-         * Constructs a new Parameters snapshot.
-         */
+        // Constructs snapshot
         Parameters(double minReal, double maxReal, double minImaginary, double maxImaginary, int maxIterations, ColourScheme colourScheme) {
             this.minReal = minReal;
             this.maxReal = maxReal;
@@ -85,7 +70,7 @@ public class MandelbrotModel {
     }
 
     /**
-     * Constructs the MandelbrotModel.
+     * Constructor for MandelbrotModel.
      * Initialises the calculator, listeners, and stacks, and sets default values.
      */
     public MandelbrotModel() {
@@ -96,10 +81,10 @@ public class MandelbrotModel {
         defaultValues();
     }
 
-    // --- State Management ---
+    // ------ State Management ------
 
     /**
-     * Resets the model to its initial, default state.
+     * Resets the model to its initial state.
      * Clears all stacks and notifies listeners.
      */
     public void defaultValues() {
@@ -111,12 +96,12 @@ public class MandelbrotModel {
         currentScheme = INITIAL_COLOUR_SCHEME;
         undoStack.clear();
         redoStack.clear();
-        fireUpdate();
+        update();
     }
 
     /**
-     * Calculates the Mandelbrot set data based on the current state parameters
-     * and the given screen resolution.
+     * Calculates the Mandelbrot set data based on current state parameters
+     * and the given resolution.
      *
      * @param width  The pixel width of the view.
      * @param height The pixel height of the view.
@@ -131,8 +116,8 @@ public class MandelbrotModel {
     }
 
     /**
-     * Zooms to a new selected area.
-     * Pushes the old state to the undo stack and notifies listeners.
+     * Zooms to selected area.
+     * Appends old state to the undo stack and notifies listeners.
      *
      * @param newMinReal      The new minimum real value.
      * @param newMaxReal      The new maximum real value.
@@ -145,42 +130,42 @@ public class MandelbrotModel {
         maxReal = newMaxReal;
         minImaginary = newMinImaginary;
         maxImaginary = newMaxImaginary;
-        fireUpdate();
+        update();
     }
 
     /**
-     * Pans the view by a given shift in the complex plane.
-     * Pushes the old state to the undo stack and notifies listeners.
+     * Pans the view by a given amount in the complex plane.
+     * Appends old state to the undo stack and notifies listeners.
      *
      * @param realShift The amount to shift the real values.
      * @param imagShift The amount to shift the imaginary values.
      */
     public void pan(double realShift, double imagShift) {
         pushCurrentStateToUndo();
-        // A pan is a translation, so we subtract the shift from the bounds
+        // Add the shift amount to the bounds
         minReal = minReal + realShift;
         maxReal = maxReal + realShift;
         minImaginary = minImaginary + imagShift;
         maxImaginary = maxImaginary + imagShift;
-        fireUpdate();
+        update();
     }
 
     /**
      * Sets a new maximum iteration count.
-     * Pushes the old state to the undo stack and notifies listeners.
+     * Appends old state to the undo stack and notifies listeners.
      *
      * @param iterations The new maximum iteration count.
      */
     public void setMaxIterations(int iterations) {
-        if (iterations == this.maxIterations) return; // No change
+        if (iterations == this.maxIterations) return; // No change, do nothing!
         pushCurrentStateToUndo();
         this.maxIterations = iterations;
-        fireUpdate();
+        update();
     }
 
     /**
      * Sets a new colour scheme.
-     * Pushes the old state to the undo stack and notifies listeners.
+     * Appends old state to the undo stack and notifies listeners.
      *
      * @param scheme The new colour scheme to use.
      */
@@ -188,59 +173,55 @@ public class MandelbrotModel {
         if (scheme == this.currentScheme) return; // No change
         pushCurrentStateToUndo();
         this.currentScheme = scheme;
-        fireUpdate();
+        update();
     }
 
-    // --- Undo / Redo Logic ---
+    // ------ Undo / Redo Logic ------
 
     /**
-     * Pushes the *current* state to the undo stack and clears the redo stack.
-     * This is called before any new user action (zoom, pan, iteration, colour change).
+     * Appends current state to the undo stack and clears the redo stack.
+     * This method is called before new user actions (zoom, pan, iteration, colour change).
      */
     private void pushCurrentStateToUndo() {
         undoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations, currentScheme));
-        redoStack.clear(); // A new action invalidates the old redo history
+        redoStack.clear();
     }
 
     /**
      * Reverts to the previous state from the undo stack.
-     * The current state is pushed to the redo stack.
+     * The current state is appended to the redo stack.
      */
     public void undo() {
         if (canUndo()) {
-            // Push current state to redo stack
             redoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations, currentScheme));
-            // Pop and load previous state from undo stack
-            loadParameters(undoStack.pop());
+            loadParameters(undoStack.pop()); // Load previous state by popping from stack
         }
     }
 
     /**
-     * Re-applies a state from the redo stack.
-     * The current state is pushed back onto the undo stack.
+     * Load recent state from the redo stack.
+     * The current state is appended back onto the undo stack.
      */
     public void redo() {
         if (canRedo()) {
-            // Push current state back to undo stack
             undoStack.push(new Parameters(minReal, maxReal, minImaginary, maxImaginary, maxIterations, currentScheme));
-            // Pop and load next state from redo stack
-            loadParameters(redoStack.pop());
+            loadParameters(redoStack.pop()); // Load next state by popping from stack
         }
     }
 
     /**
-     * Helper method to load a state from a Parameters object and fire an update.
+     * Helper method for loading state from Parameter objects and firing an update.
      *
-     * @param p The Parameters object to load.
+     * @param params The Parameters object to load.
      */
-    private void loadParameters(Parameters p) {
-        minReal = p.minReal;
-        maxReal = p.maxReal;
-        minImaginary = p.minImaginary;
-        maxImaginary = p.maxImaginary;
-        maxIterations = p.maxIterations;
-        currentScheme = p.colourScheme;
-        fireUpdate(); // Notify listeners to update the view
+    private void loadParameters(Parameters params) {
+        minReal = params.minReal;
+        maxReal = params.maxReal;
+        minImaginary = params.minImaginary;
+        maxImaginary = params.maxImaginary;
+        maxIterations = params.maxIterations;
+        currentScheme = params.colourScheme;
+        update(); // Update view
     }
 
     // --- Property Change Support (Observer Pattern) ---
@@ -248,32 +229,24 @@ public class MandelbrotModel {
     /**
      * Notifies all registered listeners that the model state has changed.
      */
-    private void fireUpdate() {
-        // "modelUpdated" is the event name.
-        // We pass 'this' as the new value so the listener can get the new state.
+    private void update() {
+        // Passing 'this' as new value means the listener can get the new state.
         pcs.firePropertyChange("modelUpdated", null, this);
     }
 
     /**
      * Adds a PropertyChangeListener to the listener list.
+     *
      * @param listener The listener to be added.
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         pcs.addPropertyChangeListener(listener);
     }
 
-    /**
-     * Removes a PropertyChangeListener from the listener list.
-     * @param listener The listener to be removed.
-     */
-    public void removePropertyChangeListener(PropertyChangeListener listener) {
-        pcs.removePropertyChangeListener(listener);
-    }
-
-    // --- Getters ---
+    // ------ Getter Methods ------
 
     /**
-     * @return The 2D array of calculated iteration data.
+     * @return The matrix of iteration data.
      */
     public int[][] getMandelbrotData() {
         return mandelbrotData;
@@ -338,7 +311,7 @@ public class MandelbrotModel {
     /**
      * Calculates the current zoom magnification relative to the initial view.
      *
-     * @return The magnification factor (e.g., 1.0, 10.0, 1000.0).
+     * @return The magnification factor (e.g, 10x, 100x, 1000x...).
      */
     public double getMagnification() {
         double currentRealRange = maxReal - minReal;

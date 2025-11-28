@@ -15,15 +15,10 @@ public class Launcher {
 
     /**
      * Main entry point for the application.
-     * Creates the MandelbrotModel (Model) and the MainFrame (View/Delegate).
-     *
-     * @param args Command line arguments (not used).
+     * Creates the MandelbrotModel (Model) and the MainFrame (Delegate).
      */
-    public static void main(String[] args) {
-        // Create model
+    public static void main() {
         MandelbrotModel model = new MandelbrotModel();
-
-        // Create delegate
         new MainFrame(model);
     }
 

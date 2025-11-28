@@ -9,8 +9,7 @@ import java.beans.PropertyChangeListener;
 
 /**
  * The main application window (JFrame).
- * This class acts as the Controller in the MVC-like pattern.
- * It sets up the UI components (panel, buttons, slider) and listens for
+ * This class sets up the UI components (panel, buttons, slider) and listens for
  * updates from the model to refresh the view.
  *
  * @author 250014506
@@ -18,23 +17,16 @@ import java.beans.PropertyChangeListener;
  * @since 1
  */
 public class MainFrame extends JFrame implements PropertyChangeListener {
-    /** The data model containing the Mandelbrot state. */
     private final MandelbrotModel model;
-    /** The panel that renders the Mandelbrot set. */
     private final MandelbrotPanel panel;
 
-    /** Button to undo the last action. */
+    // Initialise UI elements
     private final JButton undoButton;
-    /** Button to redo the last undone action. */
     private final JButton redoButton;
-    /** Slider to control the maximum iterations. */
     private final JSlider iterationSlider;
-    /** Selection box for the colour scheme. */
     private final JComboBox<MandelbrotModel.ColourScheme> colourBox;
 
-    /** The fixed width of the rendering panel. */
     private static final int WIDTH = 800;
-    /** The fixed height of the rendering panel. */
     private static final int HEIGHT = 800;
 
     /**
@@ -49,77 +41,73 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Create the drawing panel
+        // Create the panel
         panel = new MandelbrotPanel(WIDTH, HEIGHT);
         add(panel, BorderLayout.CENTER);
 
-        // Set up listeners for zoom (left-drag) and pan (right-drag)
+        // Set up listeners for zooming and panning
         panel.setZoomListener(this::handleZoom);
         panel.setPanListener(this::handlePan);
 
-        // --- Create Control Panel (Bottom) ---
-        // We use a main panel with BorderLayout to hold two rows
-        JPanel mainControlPanel = new JPanel(new BorderLayout());
+        // ------ Creating Bottom Panel ------
 
-        // Top row: Buttons
+        // Main panel which holds two rows
+        JPanel mainControlPanel = new JPanel(new BorderLayout());
+        // Top row for buttons
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
         undoButton = new JButton("Undo");
-        undoButton.addActionListener(e -> model.undo());
+        undoButton.addActionListener(_ -> model.undo());
         buttonPanel.add(undoButton);
 
         redoButton = new JButton("Redo");
-        redoButton.addActionListener(e -> model.redo());
+        redoButton.addActionListener(_ -> model.redo());
         buttonPanel.add(redoButton);
 
         JButton resetButton = new JButton("Reset");
-        resetButton.addActionListener(e -> model.defaultValues());
+        resetButton.addActionListener(_ -> model.defaultValues());
         buttonPanel.add(resetButton);
 
         mainControlPanel.add(buttonPanel, BorderLayout.NORTH);
 
-        // Bottom row: Sliders and settings
+        // Bottom row for sliders and settings
         JPanel settingsPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
 
-        // Max Iterations Slider
+        // Max iterations slider
         settingsPanel.add(new JLabel("Max Iterations:"));
-        // Changed max to 1500 as requested
+        // Picked sensible defaults (50 min, 1500 max as processing time becomes quite slow)
         iterationSlider = new JSlider(50, 1500, model.getMaxIterations());
         iterationSlider.setMajorTickSpacing(350);
         iterationSlider.setMinorTickSpacing(100);
         iterationSlider.setPaintTicks(true);
         iterationSlider.setPaintLabels(true);
-        iterationSlider.addChangeListener(e -> {
+        iterationSlider.addChangeListener(_ -> {
             if (!iterationSlider.getValueIsAdjusting()) {
                 model.setMaxIterations(iterationSlider.getValue());
             }
         });
         settingsPanel.add(iterationSlider);
 
-        // Colour Scheme Selection Box
+        // Colour scheme selection box
         settingsPanel.add(new JSeparator(SwingConstants.VERTICAL));
         settingsPanel.add(new JLabel("Colour Scheme:"));
         colourBox = new JComboBox<>(MandelbrotModel.ColourScheme.values());
         colourBox.setSelectedItem(model.getColourScheme());
-        colourBox.addActionListener(e -> {
-            // Tell the model to update the scheme
+        colourBox.addActionListener(_ -> {
             model.setColourScheme((MandelbrotModel.ColourScheme) colourBox.getSelectedItem());
         });
         settingsPanel.add(colourBox);
 
         mainControlPanel.add(settingsPanel, BorderLayout.CENTER);
-
         add(mainControlPanel, BorderLayout.SOUTH);
 
-        // --- Finalise Frame ---
-        pack();
+
+        // Finalising GUI
         setLocationRelativeTo(null); // Centre on screen
         setVisible(true);
 
-        // Listen for model changes to update the view
+        // Listen for model changes and trigger initial calculation & render
         model.addPropertyChangeListener(this);
-
-        // Trigger initial calculation and render
         updateView(model);
     }
 
@@ -127,7 +115,7 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
      * Handles the zoom event from the panel by converting pixel coordinates
      * to complex plane coordinates and telling the model to zoom.
      *
-     * @param rect The pixel-based rectangle selected by the user.
+     * @param rect The rectangle of pixels selected by the user.
      */
     private void handleZoom(Rectangle rect) {
         // Convert pixel coordinates to complex plane coordinates
@@ -139,13 +127,12 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
         double newMinImag = model.getMinImaginary() + (rect.y * imagRange / HEIGHT);
         double newMaxImag = model.getMinImaginary() + ((rect.y + rect.height) * imagRange / HEIGHT);
 
-        // Tell the model to zoom; the PropertyChangeListener will handle the update
+        // Tell the model to zoom (PropertyChangeListener handles the update)
         model.zoom(newMinReal, newMaxReal, newMinImag, newMaxImag);
     }
 
     /**
-     * Handles the pan event from the panel by converting pixel distances
-     * to a shift in the complex plane.
+     * Handles panning by converting pixel distances to a shift in the complex plane.
      *
      * @param deltaX The horizontal pixel distance dragged.
      * @param deltaY The vertical pixel distance dragged.
@@ -154,8 +141,7 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
         double realRange = model.getMaxReal() - model.getMinReal();
         double imagRange = model.getMaxImaginary() - model.getMinImaginary();
 
-        // Calculate the shift in the complex plane
-        // A drag to the right (positive deltaX) moves the view left (negative shift)
+        // Calculate the shift
         double realShift = (deltaX * realRange) / WIDTH;
         double imagShift = (deltaY * imagRange) / HEIGHT;
 
@@ -165,7 +151,7 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
 
     /**
      * This method is called whenever the model fires a PropertyChangeEvent.
-     * It triggers a full update of the view.
+     * A full update of the view is triggered.
      *
      * @param evt The event fired by the model.
      */
@@ -178,31 +164,31 @@ public class MainFrame extends JFrame implements PropertyChangeListener {
     }
 
     /**
-     * Centralised method to update all view components based on the model's state.
-     * This recalculates, re-renders, and updates all UI controls.
+     * Method for updating all view components based on the model's state.
+     * This recalculates, re-renders, and updates UI elements.
      *
      * @param model The model containing the new state.
      */
     private void updateView(MandelbrotModel model) {
-        // 1. Recalculate the set
+        // Recalculate the set
         model.calculate(WIDTH, HEIGHT);
 
-        // 2. Re-render the image and magnification
+        // Re-render the image and magnification
         panel.renderMandelbrot(
                 model.getMandelbrotData(),
                 model.getMaxIterations(),
                 model.getMagnification(),
-                model.getColourScheme() // Pass the new scheme
+                model.getColourScheme()
         );
 
-        // 3. Update slider position (e.g., after an undo/reset)
+        // Update slider position
         iterationSlider.setValue(model.getMaxIterations());
 
-        // 4. Update button enabled state
+        // Update button enabled state
         undoButton.setEnabled(model.canUndo());
         redoButton.setEnabled(model.canRedo());
 
-        // 5. Update colour box selection (e.g., after an undo/reset)
+        // Update colour scheme box selection
         colourBox.setSelectedItem(model.getColourScheme());
     }
 }
